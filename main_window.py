@@ -4,24 +4,26 @@ from config import Config
 from scroll_label_widget import ScrollLabelWidget
 from encryption_type_widget import EncryptionTypeWidget
 from theme import Theme
+from aes_cipher import AESCipher
+import random
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.user_name = "Szymon"
+        self.user_name = "me"
         # messages to show
         self.messages = []
 
-        self.setWindowTitle("bsk-1 ")
+        self.setWindowTitle("secret messenger")
         # setting geometry
         self.setGeometry(20, 20, 600, 400)
 
         # creating widgets
         self.scroll_label = ScrollLabelWidget(self)
         self.text_input = QLineEdit(self)
-        self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230)
+        self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230, AESCipher.AVAILABLE_MODES)
 
         # setting widgets
         self.add_scrollable_list()
@@ -62,7 +64,11 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.did_tick)
         self.timer.start(Config.socket_interval())
 
+    def did_change_encryption_mode(self, mode):
+        print("did_change_encryption_mode " + str(mode))
+
     def did_tick(self):
-        # TODO
-        # add socket
-        print("did tick")
+        if random.randint(0, 10) == 1:
+            self.add_message('stranger', 'message form stranger', Config.strangers_text_color())
+
+

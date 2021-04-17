@@ -8,7 +8,7 @@ class Config:
 
     @staticmethod
     def strangers_text_color():
-        return 'blue'
+        return 'red'
 
     @staticmethod
     def text_color():

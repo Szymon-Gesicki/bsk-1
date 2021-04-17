@@ -27,3 +27,6 @@ class ScrollLabelWidget(QScrollArea):
     def set_text(self, text):
         # setting text to the label
         self.label.setText(text)
+        # always scroll to bottom
+        self.verticalScrollBar().setValue(self.verticalScrollBar().value() + 10000)
+
