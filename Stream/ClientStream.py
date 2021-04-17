@@ -23,14 +23,17 @@ class ClientStream:
     BUFFER_SIZE = 8192
     HEADER_LENGTH = 100
 
-    def __init__(self, host='localhost', port=12345):
+    def __init__(self, host='192.168.1.192', port=12345):
         # Initialize socket connection
+        self.host = host
+        self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
         self.connection = self.socket
-
         # Received and not processed data
         self._data = ''
+
+    def connect(self):
+        self.socket.connect((self.host, self.port))
 
     def _is_readable(self):
         readable, _, _ = select.select([self.connection], [], [], 0)
@@ -78,7 +81,11 @@ class ClientStream:
     def send_message(self, message):
         encoded_message = message.encode()
         header = Header.build_header(ContentType.TEXT, len(message))
-        self._send_text(header + encoded_message)
+        try:
+            self._send_text(header + encoded_message)
+            return True
+        except OSError:
+            return False
 
     def _is_writable(self):
         _, writable, _ = select.select([], [self.connection], [], 5)

@@ -20,8 +20,8 @@ class MainWindow(QMainWindow):
         self.messages = []
 
         # initialize connection
-        # self.stream = ClientStream()
-        self.stream = HostStream()
+        self.stream = ClientStream()
+        # self.stream = HostStream()
 
         self.setWindowTitle("secret messenger")
         # setting geometry
@@ -32,11 +32,13 @@ class MainWindow(QMainWindow):
         self.text_input = QLineEdit(self)
         self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230, AESCipher.AVAILABLE_MODES)
         self.file_button = QPushButton(self)
+        self.connection_button = QPushButton(self)
 
         # setting widgets
         self.add_scrollable_list()
         self.add_input_text()
         self.add_file_button()
+        self.add_connection_button()
 
         # socket timer
         self.timer = QtCore.QTimer()
@@ -59,13 +61,20 @@ class MainWindow(QMainWindow):
         if not message:
             return
         self.text_input.clear()
-        self.add_message(self.user_name, message, Config.user_text_color())
-        self.stream.send_message(message)
+        if not self.stream.send_message(message):
+            self.add_message('system', 'error while sending message', Config.system_text_color())
+        else:
+            self.add_message(self.user_name, message, Config.user_text_color())
 
     def add_file_button(self):
-        self.file_button.setGeometry(450, 300, 80, 40)
+        self.file_button.setGeometry(420, 300, 80, 40)
         self.file_button.setText('send file')
         self.file_button.clicked.connect(self.did_press_file_button)
+
+    def add_connection_button(self):
+        self.connection_button.setGeometry(510, 300, 80, 40)
+        self.connection_button.setText('connect')
+        self.connection_button.clicked.connect(self.did_press_connection_button)
 
     def add_message(self, username, message, color):
         message = Theme.colorize(username + ': ', color) + \
@@ -74,12 +83,16 @@ class MainWindow(QMainWindow):
 
         self.messages.append(message)
         self.scroll_label.set_text(''.join(self.messages))
+
     def did_press_file_button(self):
         file = QFileDialog.getOpenFileUrl(self, 'select file to send')
         if not file[0].isEmpty():
             self.add_message('system', 'sending file: "' + str(file[0].fileName()) + '"', Config.system_text_color())
         # TODO
         # send file
+
+    def did_press_connection_button(self):
+        self.stream.connect()
 
     def start_socket_timer(self):
         self.timer.timeout.connect(self.did_tick)
@@ -92,8 +105,4 @@ class MainWindow(QMainWindow):
         messages = self.stream.get_new_messages()
         for m in messages:
             self.add_message('stranger', m, Config.strangers_text_color())
-
-        if random.randint(0, 10) == 1:
-            self.add_message('stranger', 'message form stranger', Config.strangers_text_color())
-
 
