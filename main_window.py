@@ -24,10 +24,12 @@ class MainWindow(QMainWindow):
         self.scroll_label = ScrollLabelWidget(self)
         self.text_input = QLineEdit(self)
         self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230, AESCipher.AVAILABLE_MODES)
+        self.file_button = QPushButton(self)
 
         # setting widgets
         self.add_scrollable_list()
         self.add_input_text()
+        self.add_file_button()
 
         # socket timer
         self.timer = QtCore.QTimer()
@@ -52,6 +54,11 @@ class MainWindow(QMainWindow):
         self.text_input.clear()
         self.add_message(self.user_name, message, Config.user_text_color())
 
+    def add_file_button(self):
+        self.file_button.setGeometry(450, 300, 80, 40)
+        self.file_button.setText('send file')
+        self.file_button.clicked.connect(self.did_press_file_button)
+
     def add_message(self, username, message, color):
         message = Theme.colorize(username + ': ', color) + \
                   Theme.colorize(message, Config.text_color()) + \
@@ -59,6 +66,12 @@ class MainWindow(QMainWindow):
 
         self.messages.append(message)
         self.scroll_label.set_text(''.join(self.messages))
+    def did_press_file_button(self):
+        file = QFileDialog.getOpenFileUrl(self, 'select file to send')
+        if not file[0].isEmpty():
+            self.add_message('system', 'sending file: "' + str(file[0].fileName()) + '"', Config.system_text_color())
+        # TODO
+        # send file
 
     def start_socket_timer(self):
         self.timer.timeout.connect(self.did_tick)

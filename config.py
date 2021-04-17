@@ -11,6 +11,10 @@ class Config:
         return 'red'
 
     @staticmethod
+    def system_text_color():
+        return 'yellow'
+
+    @staticmethod
     def text_color():
         return 'white'
 
