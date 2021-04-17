@@ -8,7 +8,6 @@ from scroll_label_widget import ScrollLabelWidget
 from encryption_type_widget import EncryptionTypeWidget
 from theme import Theme
 from aes_cipher import AESCipher
-import random
 
 
 class MainWindow(QMainWindow):
@@ -20,25 +19,26 @@ class MainWindow(QMainWindow):
         self.messages = []
 
         # initialize connection
-        self.stream = ClientStream()
-        # self.stream = HostStream()
+        self.stream = None
 
         self.setWindowTitle("secret messenger")
         # setting geometry
-        self.setGeometry(20, 20, 600, 400)
+        self.setGeometry(20, 20, 620, 400)
 
         # creating widgets
         self.scroll_label = ScrollLabelWidget(self)
         self.text_input = QLineEdit(self)
         self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230, AESCipher.AVAILABLE_MODES)
         self.file_button = QPushButton(self)
-        self.connection_button = QPushButton(self)
+        self.join_button = QPushButton(self)
+        self.create_button = QPushButton(self)
 
         # setting widgets
         self.add_scrollable_list()
         self.add_input_text()
         self.add_file_button()
-        self.add_connection_button()
+        self.add_join_button()
+        self.add_create_button()
 
         # socket timer
         self.timer = QtCore.QTimer()
@@ -61,20 +61,28 @@ class MainWindow(QMainWindow):
         if not message:
             return
         self.text_input.clear()
-        if not self.stream.send_message(message):
+
+        if not self.stream:
+            self.add_message('system', 'connect before send', Config.system_text_color())
+        elif not self.stream.send_message(message):
             self.add_message('system', 'error while sending message', Config.system_text_color())
         else:
             self.add_message(self.user_name, message, Config.user_text_color())
 
     def add_file_button(self):
-        self.file_button.setGeometry(420, 300, 80, 40)
-        self.file_button.setText('send file')
+        self.file_button.setGeometry(420, 300, 60, 40)
+        self.file_button.setText('file')
         self.file_button.clicked.connect(self.did_press_file_button)
 
-    def add_connection_button(self):
-        self.connection_button.setGeometry(510, 300, 80, 40)
-        self.connection_button.setText('connect')
-        self.connection_button.clicked.connect(self.did_press_connection_button)
+    def add_create_button(self):
+        self.create_button.setGeometry(540, 300, 70, 40)
+        self.create_button.setText('create')
+        self.create_button.clicked.connect(self.did_press_create_button)
+
+    def add_join_button(self):
+        self.join_button.setGeometry(480, 300, 60, 40)
+        self.join_button.setText('join')
+        self.join_button.clicked.connect(self.did_press_join_button)
 
     def add_message(self, username, message, color):
         message = Theme.colorize(username + ': ', color) + \
@@ -91,11 +99,29 @@ class MainWindow(QMainWindow):
         # TODO
         # send file
 
-    def did_press_connection_button(self):
+    def did_press_join_button(self):
+        self.stream = ClientStream()
+        self.disable_stream_button()
         if self.stream.connect():
             self.add_message('system', 'did connect', Config.system_text_color())
         else:
+            self.enable_stream_button()
+            self.stream = None
             self.add_message('system', 'error while connecting', Config.system_text_color())
+
+    def did_press_create_button(self):
+        self.disable_stream_button()
+        # Todo
+        # blocking function
+        # self.stream = HostStream()
+
+    def disable_stream_button(self):
+        self.join_button.setEnabled(False)
+        self.create_button.setEnabled(False)
+
+    def enable_stream_button(self):
+        self.join_button.setEnabled(True)
+        self.create_button.setEnabled(True)
 
     def start_socket_timer(self):
         self.timer.timeout.connect(self.did_tick)
@@ -105,6 +131,8 @@ class MainWindow(QMainWindow):
         print("did_change_encryption_mode " + str(mode))
 
     def did_tick(self):
+        if not self.stream:
+            return
         messages = self.stream.get_new_messages()
         for m in messages:
             self.add_message('stranger', m, Config.strangers_text_color())
