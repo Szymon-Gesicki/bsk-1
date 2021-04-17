@@ -1,7 +1,7 @@
 import json
 from json import JSONDecodeError
 
-from Stream.Exceptions import HeaderReadingError
+from connection.exceptions import HeaderReadingError
 
 
 class Header:

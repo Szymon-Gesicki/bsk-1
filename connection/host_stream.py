@@ -1,7 +1,7 @@
 import select
 import socket
 import time
-from Stream.ClientStream import ClientStream
+from connection.client_stream import ClientStream
 
 
 class HostStream(ClientStream):

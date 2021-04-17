@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 
-from Stream.ClientStream import ClientStream
-from Stream.HostStream import HostStream
+from connection.client_stream import ClientStream
+from connection.host_stream import HostStream
 from config import Config
 from scroll_label_widget import ScrollLabelWidget
 from encryption_type_widget import EncryptionTypeWidget

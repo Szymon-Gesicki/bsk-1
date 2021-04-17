@@ -3,7 +3,7 @@ import socket
 import time
 from enum import Enum
 
-from Stream.Header import Header
+from connection.header import Header
 
 """
 content-type:
@@ -24,12 +24,12 @@ class ClientStream:
     HEADER_LENGTH = 100
 
     def __init__(self, host='192.168.1.192', port=12345):
-        # Initialize socket connection
+        # initialize socket connection
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection = self.socket
-        # Received and not processed data
+        # received and not processed data
         self._data = ''
 
     def connect(self):
@@ -40,10 +40,10 @@ class ClientStream:
             return False
 
     def _is_readable(self):
-        readable, _, _ = select.select([self.connection], [], [], 0)
+        readable, _, _ = select.select([self.connection], [], [], 1)
         return True if readable else False
 
-    def _send_text(self, text):
+    def _send_data(self, text):
         text_length = len(text)
         total_sent = 0
         while total_sent < text_length:
@@ -52,7 +52,7 @@ class ClientStream:
                 raise RuntimeError("Socket connection has broken.")
             total_sent = total_sent + sent
 
-    def _receive(self):
+    def _receive_data(self):
         while self._is_readable():
             self._data += self.connection.recv(self.BUFFER_SIZE).decode()
             return True
@@ -72,7 +72,7 @@ class ClientStream:
         header = Header.load_header(header)
         return header
 
-    def _read_messages(self):
+    def _parse_data(self):
         messages = []
         header = self._get_header()
         while header:
@@ -86,18 +86,14 @@ class ClientStream:
         encoded_message = message.encode()
         header = Header.build_header(ContentType.TEXT, len(message))
         try:
-            self._send_text(header + encoded_message)
+            self._send_data(header + encoded_message)
             return True
         except OSError:
             return False
 
-    def _is_writable(self):
-        _, writable, _ = select.select([], [self.connection], [], 5)
-        return True if writable else False
-
     def get_new_messages(self):
-        self._receive()
-        messages = self._read_messages()
+        self._receive_data()
+        messages = self._parse_data()
         return messages
 
     def close(self):
