@@ -33,7 +33,11 @@ class ClientStream:
         self._data = ''
 
     def connect(self):
-        self.socket.connect((self.host, self.port))
+        try:
+            self.socket.connect((self.host, self.port))
+            return True
+        except OSError:
+            return False
 
     def _is_readable(self):
         readable, _, _ = select.select([self.connection], [], [], 0)

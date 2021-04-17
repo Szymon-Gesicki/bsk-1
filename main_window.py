@@ -92,7 +92,10 @@ class MainWindow(QMainWindow):
         # send file
 
     def did_press_connection_button(self):
-        self.stream.connect()
+        if self.stream.connect():
+            self.add_message('system', 'did connect', Config.system_text_color())
+        else:
+            self.add_message('system', 'error while connecting', Config.system_text_color())
 
     def start_socket_timer(self):
         self.timer.timeout.connect(self.did_tick)
