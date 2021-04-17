@@ -1,5 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
+
+from Stream.ClientStream import ClientStream
+from Stream.HostStream import HostStream
 from config import Config
 from scroll_label_widget import ScrollLabelWidget
 from encryption_type_widget import EncryptionTypeWidget
@@ -15,6 +18,10 @@ class MainWindow(QMainWindow):
         self.user_name = "me"
         # messages to show
         self.messages = []
+
+        # initialize connection
+        # self.stream = ClientStream()
+        self.stream = HostStream()
 
         self.setWindowTitle("secret messenger")
         # setting geometry
@@ -53,6 +60,7 @@ class MainWindow(QMainWindow):
             return
         self.text_input.clear()
         self.add_message(self.user_name, message, Config.user_text_color())
+        self.stream.send_message(message)
 
     def add_file_button(self):
         self.file_button.setGeometry(450, 300, 80, 40)
@@ -81,6 +89,10 @@ class MainWindow(QMainWindow):
         print("did_change_encryption_mode " + str(mode))
 
     def did_tick(self):
+        messages = self.stream.get_new_messages()
+        for m in messages:
+            self.add_message('stranger', m, Config.strangers_text_color())
+
         if random.randint(0, 10) == 1:
             self.add_message('stranger', 'message form stranger', Config.strangers_text_color())
 
