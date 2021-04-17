@@ -2,7 +2,7 @@
 class Theme:
 
     @staticmethod
-    def color_it(text, color):
+    def colorize(text, color):
         return '<font color="' + color + '">' + text + '</font>'
 
     @staticmethod

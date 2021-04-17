@@ -24,23 +24,23 @@ class MainWindow(QMainWindow):
         self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230)
 
         # setting widgets
-        self.add_scrollable_list(self.scroll_label)
-        self.add_input_text(self.text_input)
+        self.add_scrollable_list()
+        self.add_input_text()
 
         # socket timer
         self.timer = QtCore.QTimer()
-        self.start_socket_timer(self.timer)
+        self.start_socket_timer()
 
         # showing all the widgets
         self.show()
 
-    def add_scrollable_list(self, scroll_label):
-        scroll_label.set_text("")
-        scroll_label.setGeometry(20, 20, 560, 200)
+    def add_scrollable_list(self):
+        self.scroll_label.set_text("")
+        self.scroll_label.setGeometry(20, 20, 560, 200)
 
-    def add_input_text(self, text_input):
-        text_input.setGeometry(20, 300, 400, 40)
-        text_input.returnPressed.connect(self.did_enter_text_message)
+    def add_input_text(self):
+        self.text_input.setGeometry(20, 300, 400, 40)
+        self.text_input.returnPressed.connect(self.did_enter_text_message)
 
     def did_enter_text_message(self):
         message = self.text_input.text()
@@ -51,16 +51,16 @@ class MainWindow(QMainWindow):
         self.add_message(self.user_name, message, Config.user_text_color())
 
     def add_message(self, username, message, color):
-        message = Theme.color_it(username + ': ', color) + \
-                  Theme.color_it(message, Config.text_color()) + \
+        message = Theme.colorize(username + ': ', color) + \
+                  Theme.colorize(message, Config.text_color()) + \
                   Theme.new_line()
 
         self.messages.append(message)
         self.scroll_label.set_text(''.join(self.messages))
 
-    def start_socket_timer(self, timer):
-        timer.timeout.connect(self.did_tick)
-        timer.start(Config.socket_interval())
+    def start_socket_timer(self):
+        self.timer.timeout.connect(self.did_tick)
+        self.timer.start(Config.socket_interval())
 
     def did_tick(self):
         # TODO
