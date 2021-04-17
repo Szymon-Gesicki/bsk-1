@@ -8,7 +8,6 @@ from scroll_label_widget import ScrollLabelWidget
 from encryption_type_widget import EncryptionTypeWidget
 from theme import Theme
 from aes_cipher import AESCipher
-import random
 
 
 class MainWindow(QMainWindow):
@@ -105,7 +104,6 @@ class MainWindow(QMainWindow):
         print("did_change_encryption_mode " + str(mode))
 
     def did_tick(self):
-        messages = self.stream.get_new_messages()
+        messages = self.stream.get_new_notifications()
         for m in messages:
             self.add_message('stranger', m, Config.strangers_text_color())
-
