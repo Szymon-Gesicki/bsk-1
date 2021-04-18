@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QDir
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 
@@ -93,10 +94,11 @@ class MainWindow(QMainWindow):
         self.scroll_label.set_text(''.join(self.messages))
 
     def did_press_file_button(self):
-        file = QFileDialog.getOpenFileUrl(self, 'select file to send')
-        if not file[0].isEmpty():
-            self.add_message('system', 'sending file: "' + str(file[0].fileName()) + '"', Config.system_text_color())
-            self.stream.send_file(file[0].path())
+        file = QFileDialog.getOpenFileName(self, 'select file to send')
+        if file[0]:
+            self.add_message('system', 'sending file: "' + str(file[0]) + '"', Config.system_text_color())
+            path = QDir.toNativeSeparators(file[0])
+            self.stream.send_file(path)
 
     def did_press_join_button(self):
         self.stream = ClientStream()
