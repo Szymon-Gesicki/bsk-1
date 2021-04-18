@@ -136,7 +136,13 @@ class MainWindow(QMainWindow):
                 self.add_message('stranger', m['message'], Config.strangers_text_color())
 
             elif m['type'] == NotificationType.RECEIVING_FILE:
-                self.add_message('stranger', 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
+                if m['finished']:
+                    self.add_message('stranger', 'file downloaded.', Config.strangers_text_color())
+                else:
+                    self.add_message('stranger', 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
 
             elif m['type'] == NotificationType.SENDING_FILE:
-                self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
+                if m['finished']:
+                    self.add_message('stranger', 'file sent.', Config.strangers_text_color())
+                else:
+                    self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())

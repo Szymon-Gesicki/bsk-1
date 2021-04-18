@@ -86,18 +86,25 @@ class ClientStream:
             })
 
     def _parse_data(self):
-        if self._file_to_send and not self._file_to_send.finished:
-            # Send the next chunk
-            self._send_data(self._file_to_send.read_chunk())
+        if self._file_to_send:
+            if self._file_to_send.finished:
+                self._new_notification(NotificationType.SENDING_FILE)
+                del self._file_to_send
+            else:
+                # Send the next chunk
+                self._send_data(self._file_to_send.read_chunk())
 
-        if self._file_to_receive and not self._file_to_receive.finished:
-            # Read the next chunk
-            chunk_info = self._read_data(File.CHUNK_INFO_SIZE)
-            amount_of_bytes = int.from_bytes(chunk_info, 'big')
-            chunk = self._read_data(amount_of_bytes)
-            self._file_to_receive.write_chunk(chunk)
-
-            return  # Receiving file, so no headers to read
+        if self._file_to_receive:
+            if self._file_to_receive.finished:
+                self._new_notification(NotificationType.RECEIVING_FILE)
+                del self._file_to_receive
+            else:
+                # Read the next chunk
+                chunk_info = self._read_data(File.CHUNK_INFO_SIZE)
+                amount_of_bytes = int.from_bytes(chunk_info, 'big')
+                chunk = self._read_data(amount_of_bytes)
+                self._file_to_receive.write_chunk(chunk)
+                return  # Receiving file, so no headers to read
 
         while header := self._get_header():
             content = self._read_data(header['size']).decode()

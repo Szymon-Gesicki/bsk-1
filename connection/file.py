@@ -56,6 +56,7 @@ class FileToReceive(File):
     def __init__(self, file_info):
         super().__init__(File.DOWNLOAD_PATH)
         self._load_from_str(file_info)
+        self._path = os.path.join(File.DOWNLOAD_PATH, self._file_name)
 
     def _load_from_str(self, data):
         try:
