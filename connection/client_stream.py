@@ -2,7 +2,7 @@ import select
 import socket
 from enum import Enum
 
-from connection.file import File, FileToReceive
+from connection.file import File, FileToReceive, FileToSend
 from connection.header import Header, ContentType
 
 
@@ -25,13 +25,6 @@ class ClientStream:
         self._new_notifications = []
         self._file_to_send = None
         self._file_to_receive = None
-
-    def connect(self):
-        try:
-            self.socket.connect((self.host, self.port))
-            return True
-        except OSError:
-            return False
 
     def _is_readable(self):
         readable, _, _ = select.select([self.connection], [], [], 1)
@@ -110,6 +103,13 @@ class ClientStream:
             elif header['content-type'] == ContentType.FILE.value:
                 self._file_to_receive = FileToReceive(content)
 
+    def connect(self):
+        try:
+            self.socket.connect((self.host, self.port))
+            return True
+        except OSError:
+            return False
+
     def send_message(self, message):
         encoded_message = message.encode()
         header = Header.build_header(ContentType.TEXT, len(message))
@@ -118,6 +118,12 @@ class ClientStream:
             return True
         except OSError:
             return False
+
+    def send_file(self, path):
+        if self._file_to_send:
+            return False
+
+        self._file_to_send = FileToSend(path)
 
     def get_new_notifications(self):
         self._receive_data()
@@ -131,3 +137,5 @@ class ClientStream:
 
     def close(self):
         self.socket.close()
+        del self._file_to_receive
+        del self._file_to_send
