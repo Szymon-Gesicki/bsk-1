@@ -150,7 +150,7 @@ class ClientStream:
         if self._file_to_send:
             self._new_notification(NotificationType.SENDING_FILE)
         new_notifications = self._new_notifications
-        self._new_notifications = None
+        self._new_notifications = []
         return new_notifications
 
     def close(self):
