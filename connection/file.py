@@ -48,6 +48,11 @@ class File:
     def finished(self):
         return self._finished
 
+    @staticmethod
+    def _prepare_path(path):
+        if not os.path.isdir(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+
     def close(self):
         self._file.close()
 
@@ -68,9 +73,10 @@ class FileToReceive(File):
         if not all(key in values for key in File.REQUIRED_FIELDS):
             raise FileInfoReadingError(data, 'Not all required values are in received file-info.')
 
-        self._path = os.path.join(self._path, self._file_name)
         self._file_name = values['file-name']
+        self._path = os.path.join(self._path, self._file_name)
         self._size = values['size']
+        self._prepare_path(self._path)
         self._file = open(self._path, 'wb')
 
     def write_chunk(self, chunk):

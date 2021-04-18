@@ -30,7 +30,7 @@ class ClientStream:
         self.connection = self.socket
 
     def _is_readable(self):
-        readable, _, _ = select.select([self.connection], [], [], 1)
+        readable, _, _ = select.select([self.connection], [], [], 0)
         return True if readable else False
 
     def _send_data(self, text):
@@ -149,8 +149,9 @@ class ClientStream:
             self._new_notification(NotificationType.RECEIVING_FILE)
         if self._file_to_send:
             self._new_notification(NotificationType.SENDING_FILE)
-
-        return self._new_notifications
+        new_notifications = self._new_notifications
+        self._new_notifications = None
+        return new_notifications
 
     def close(self):
         self.socket.close()
