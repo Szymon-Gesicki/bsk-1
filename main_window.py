@@ -110,9 +110,7 @@ class MainWindow(QMainWindow):
 
     def did_press_create_button(self):
         self.disable_stream_button()
-        # Todo
-        # blocking function
-        # self.stream = HostStream()
+        self.stream = HostStream()
 
     def disable_stream_button(self):
         self.join_button.setEnabled(False)
