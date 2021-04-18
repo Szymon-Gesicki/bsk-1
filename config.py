@@ -16,9 +16,9 @@ class Config:
 
     @staticmethod
     def text_color():
-        return 'white'
+        return 'black'
 
     @staticmethod
     def socket_interval():
         # in ms
-        return 500
+        return 0
