@@ -21,7 +21,7 @@ class File:
         self._finished = False
 
     def __del__(self):
-        self._close()
+        self.close()
 
     @property
     def details(self):
@@ -48,7 +48,7 @@ class File:
     def finished(self):
         return self._finished
 
-    def _close(self):
+    def close(self):
         self._file.close()
 
 
@@ -56,7 +56,6 @@ class FileToReceive(File):
     def __init__(self, file_info):
         super().__init__(File.DOWNLOAD_PATH)
         self._load_from_str(file_info)
-        self._path = os.path.join(File.DOWNLOAD_PATH, self._file_name)
 
     def _load_from_str(self, data):
         try:
@@ -69,6 +68,7 @@ class FileToReceive(File):
         if not all(key in values for key in File.REQUIRED_FIELDS):
             raise FileInfoReadingError(data, 'Not all required values are in received file-info.')
 
+        self._path = os.path.join(self._path, self._file_name)
         self._file_name = values['file-name']
         self._size = values['size']
         self._file = open(self._path, 'wb')
@@ -77,7 +77,6 @@ class FileToReceive(File):
         self._file.write(chunk)
         self._processed_size += len(chunk)
         if len(chunk) != File.CHUNK_SIZE:
-            self._close()
             self._finished = True  # if the whole file has been saved
 
 

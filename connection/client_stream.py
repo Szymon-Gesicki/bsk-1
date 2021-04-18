@@ -89,7 +89,8 @@ class ClientStream:
         if self._file_to_send:
             if self._file_to_send.finished:
                 self._new_notification(NotificationType.SENDING_FILE)
-                del self._file_to_send
+                self._file_to_send.close()
+                self._file_to_send = None
             else:
                 # Send the next chunk
                 self._send_data(self._file_to_send.read_chunk())
@@ -97,7 +98,8 @@ class ClientStream:
         if self._file_to_receive:
             if self._file_to_receive.finished:
                 self._new_notification(NotificationType.RECEIVING_FILE)
-                del self._file_to_receive
+                self._file_to_receive.close()
+                self._file_to_receive = None
             else:
                 # Read the next chunk
                 chunk_info = self._read_data(File.CHUNK_INFO_SIZE)
