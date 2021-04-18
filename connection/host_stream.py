@@ -5,9 +5,7 @@ from connection.client_stream import ClientStream
 
 
 class HostStream(ClientStream):
-    def __init__(self, client='localhost', port=12345):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind((socket.gethostname(), port))
+    def _create_connection(self):
+        self.socket.bind((socket.gethostname(), self.port))
         self.socket.listen(5)
         self.connection, info = self.socket.accept()
-        self._data = ''

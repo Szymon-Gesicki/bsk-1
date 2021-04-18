@@ -19,12 +19,15 @@ class ClientStream:
     def __init__(self, host='192.168.1.192', port=12345):
         self.host = host
         self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # initialize socket connection
-        self.connection = self.socket
         self._data = ''  # received and not processed data
         self._new_notifications = []
         self._file_to_send = None
         self._file_to_receive = None
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # initialize socket connection
+        self._create_connection()
+
+    def _create_connection(self):
+        self.connection = self.socket
 
     def _is_readable(self):
         readable, _, _ = select.select([self.connection], [], [], 1)

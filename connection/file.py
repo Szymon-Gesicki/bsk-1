@@ -89,7 +89,6 @@ class FileToSend(File):
         self._size = os.path.getsize(path)
         self._file_name = os.path.basename(path)
         self._file = open(path, 'rb')
-        pass
 
     def read_chunk(self):
         amount_of_bytes = (0).to_bytes(2, byteorder='big')
