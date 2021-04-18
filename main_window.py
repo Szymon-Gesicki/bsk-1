@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
         file = QFileDialog.getOpenFileUrl(self, 'select file to send')
         if not file[0].isEmpty():
             self.add_message('system', 'sending file: "' + str(file[0].fileName()) + '"', Config.system_text_color())
-            self.stream.send_file(file[0])
+            self.stream.send_file(file[0].path())
 
     def did_press_join_button(self):
         self.stream = ClientStream()

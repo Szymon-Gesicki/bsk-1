@@ -19,7 +19,7 @@ class ClientStream:
     def __init__(self, host='192.168.1.192', port=12345):
         self.host = host
         self.port = port
-        self._data = ''  # received and not processed data
+        self._data = b''  # received and not processed data
         self._new_notifications = []
         self._file_to_send = None
         self._file_to_receive = None
@@ -44,7 +44,7 @@ class ClientStream:
 
     def _receive_data(self):
         while self._is_readable():
-            self._data += self.connection.recv(self.BUFFER_SIZE).decode()
+            self._data += self.connection.recv(self.BUFFER_SIZE)
             return True
         return False
 
@@ -59,7 +59,7 @@ class ClientStream:
         data = self._read_data(Header.HEADER_LENGTH)
         if not data:
             return None
-        header = Header.load_header(data)
+        header = Header.load_header(data.decode())
         return header
 
     def _new_notification(self, message_type, content=None):
@@ -100,11 +100,12 @@ class ClientStream:
             return  # Receiving file, so no headers to read
 
         while header := self._get_header():
-            content = self._read_data(header['size'])
+            content = self._read_data(header['size']).decode()
             if header['content-type'] == ContentType.TEXT.value:
                 self._new_notification(NotificationType.MESSAGE, content)
             elif header['content-type'] == ContentType.FILE.value:
                 self._file_to_receive = FileToReceive(content)
+                break
 
     def connect(self):
         try:
@@ -127,6 +128,10 @@ class ClientStream:
             return False
 
         self._file_to_send = FileToSend(path)
+        file_info = self._file_to_send.details
+        header = Header.build_header(ContentType.FILE, len(file_info))
+        self._send_data(header + file_info)
+        return True
 
     def get_new_notifications(self):
         self._receive_data()

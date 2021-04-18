@@ -30,7 +30,7 @@ class File:
             'file-name': self._file_name,
             'size': self._size,
         }
-        return details
+        return json.dumps(details).encode()
 
     @property
     def size(self):
@@ -70,7 +70,7 @@ class FileToReceive(File):
 
         self._file_name = values['file-name']
         self._size = values['size']
-        self.file = open(self._path, 'wb')
+        self._file = open(self._path, 'wb')
 
     def write_chunk(self, chunk):
         self._file.write(chunk)
