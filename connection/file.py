@@ -10,7 +10,7 @@ class File:
     REQUIRED_FIELDS = ['version', 'file-name', 'size']
     DOWNLOAD_PATH = 'tmp'
     CHUNK_INFO_SIZE = 2
-    CHUNK_SIZE = 1022
+    CHUNK_SIZE = 65534
 
     def __init__(self, path):
         self._path = path
@@ -82,7 +82,7 @@ class FileToReceive(File):
     def write_chunk(self, chunk):
         self._file.write(chunk)
         self._processed_size += len(chunk)
-        if len(chunk) != File.CHUNK_SIZE:
+        if len(chunk) < File.CHUNK_SIZE:
             self._finished = True  # if the whole file has been saved
 
 

@@ -49,6 +49,7 @@ class ClientStream:
         return False
 
     def _read_data(self, length):
+        self._receive_data()
         if length > len(self._data):
             return None
         data = self._data[:length]
@@ -104,9 +105,10 @@ class ClientStream:
                 if not chunk_info:
                     return
                 amount_of_bytes = int.from_bytes(chunk_info, 'big')
-                while chunk := self._read_data(amount_of_bytes):
-                    self._file_to_receive.write_chunk(chunk)
-                    return  # Receiving file, so no headers to read
+                while not (chunk := self._read_data(amount_of_bytes)):
+                    pass
+                self._file_to_receive.write_chunk(chunk)
+                return
 
         while header := self._get_header():
             content = self._read_data(header['size']).decode()
@@ -143,7 +145,6 @@ class ClientStream:
         return True
 
     def get_new_notifications(self):
-        self._receive_data()
         self._parse_data()
         if self._file_to_receive:
             self._new_notification(NotificationType.RECEIVING_FILE)
