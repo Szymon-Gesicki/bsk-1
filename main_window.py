@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 
-from connection.client_stream import ClientStream
+from connection.client_stream import ClientStream, NotificationType
 from connection.host_stream import HostStream
 from config import Config
 from scroll_label_widget import ScrollLabelWidget
@@ -96,8 +96,7 @@ class MainWindow(QMainWindow):
         file = QFileDialog.getOpenFileUrl(self, 'select file to send')
         if not file[0].isEmpty():
             self.add_message('system', 'sending file: "' + str(file[0].fileName()) + '"', Config.system_text_color())
-        # TODO
-        # send file
+            self.stream.send_file(file[0])
 
     def did_press_join_button(self):
         self.stream = ClientStream()
@@ -135,4 +134,11 @@ class MainWindow(QMainWindow):
             return
         messages = self.stream.get_new_notifications()
         for m in messages:
-            self.add_message('stranger', m, Config.strangers_text_color())
+            if m['type'] == NotificationType.MESSAGE:
+                self.add_message('stranger', m['message'], Config.strangers_text_color())
+
+            elif m['type'] == NotificationType.RECEIVING_FILE:
+                self.add_message('stranger', 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
+
+            elif m['type'] == NotificationType.SENDING_FILE:
+                self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
