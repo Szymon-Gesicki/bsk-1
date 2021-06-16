@@ -158,7 +158,6 @@ class MainWindow(QMainWindow):
         self.file_button.setEnabled(True)
 
     def create_host(self, host):
-        print("create host")
         self.stream = HostStream(host=host)
 
     def disable_stream_button(self):
