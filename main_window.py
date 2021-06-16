@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
         if not result:
             return
 
-        self.stream = ClientStream(host=host)
+        self.stream = ClientStream(host=host, encryption_mode=self.encryption_mode, password=self.password)
         self.disable_stream_button()
         if self.stream.connect():
             self.add_message('system', 'Did connect', Config.system_text_color())
@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
         self.file_button.setEnabled(True)
 
     def create_host(self, host):
-        self.stream = HostStream(host=host)
+        self.stream = HostStream(host=host, encryption_mode=self.encryption_mode, password=self.password)
 
     def disable_stream_button(self):
         self.join_button.setEnabled(False)
