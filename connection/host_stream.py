@@ -13,6 +13,6 @@ class HostStream(ClientStream):
         self.connection, info = self.socket.accept()
         while not (data := self._read_data(self.UUID_LENGTH)):
             pass
-        self._session_key = self._key_manager.decrypt(data).decode()
-        self._aes = AESCipher(self._session_key)
+        self._session_key = self._key_manager.decrypt(data)
+        self._aes = AESCipher(self._session_key[:16])
         return

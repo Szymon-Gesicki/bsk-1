@@ -5,7 +5,7 @@ from aes_cipher import AESCipher
 class TestAESCipher(TestCase):
 
     def test_encryption(self):
-        key = b'0123456782638298'
+        key = '76ed0f0b-cef1-11'
         text_to_encryption = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
 
         aes = AESCipher(key)

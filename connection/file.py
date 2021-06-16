@@ -10,7 +10,9 @@ class File:
     REQUIRED_FIELDS = ['version', 'file-name', 'size']
     DOWNLOAD_PATH = 'tmp'
     CHUNK_INFO_SIZE = 2
-    CHUNK_SIZE = 65534
+    ENCRYPTED_CHUNK_INFO_SIZE = 44
+    CHUNK_SIZE = 32768
+    ENCRYPTED_CHUNK_SIZE = 43736
 
     def __init__(self, path):
         self._path = path
@@ -30,7 +32,7 @@ class File:
             'file-name': self._file_name,
             'size': self._size,
         }
-        return json.dumps(details).encode()
+        return json.dumps(details)
 
     @property
     def size(self):
@@ -98,11 +100,11 @@ class FileToSend(File):
 
     def read_chunk(self):
         amount_of_bytes = (0).to_bytes(2, byteorder='big')
-        if data := self._file.read(File.CHUNK_SIZE):
+        if data := self._file.read(File.ENCRYPTED_CHUNK_SIZE):
             amount_of_bytes = (len(data)).to_bytes(2, byteorder='big')
 
         self._processed_size += len(data)
 
-        if not data or len(data) < File.CHUNK_SIZE:
+        if not data or len(data) < File.ENCRYPTED_CHUNK_SIZE:
             self._finished = True  # if the whole file has been read
-        return amount_of_bytes + data
+        return data.decode()

@@ -20,7 +20,6 @@ class NotificationType(Enum):
 
 class ClientStream:
     BUFFER_SIZE = 8192
-    HEADER_LENGTH = 100
     UUID_LENGTH = 128
 
     def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC, password=''):
@@ -45,8 +44,6 @@ class ClientStream:
         return True if readable else False
 
     def _send_data(self, text):
-        if self._aes:
-            text = self._aes.encrypt(text, self._encryption_mode)
         text_length = len(text)
         total_sent = 0
         while total_sent < text_length:
@@ -68,11 +65,11 @@ class ClientStream:
         data = self._data[:length]
         self._data = self._data[length:]
         if self._aes:
-            data = self._aes.decrypt(data, self._encryption_mode)
+            data = self._aes.decrypt(data, self._encryption_mode).encode()
         return data
 
     def _get_header(self):
-        data = self._read_data(Header.HEADER_LENGTH)
+        data = self._read_data(Header.ENCODED_HEADER_LENGTH)
         if not data:
             return None
         header = Header.load_header(data.decode())
@@ -113,7 +110,12 @@ class ClientStream:
                 self._file_to_send = None
             else:
                 # Send the next chunk
-                self._send_data(self._file_to_send.read_chunk())
+                chunk = self._file_to_send.read_chunk()
+                encrypted_chunk = self._aes.encrypt(chunk, self._encryption_mode)
+                chunk_info = str(len(encrypted_chunk))
+                encrypted_chunk_info = self._aes.encrypt(chunk_info, self._encryption_mode)
+                self._send_data(encrypted_chunk_info)
+                self._send_data(encrypted_chunk)
 
         if self._file_to_receive:
             if self._file_to_receive.finished:
@@ -121,17 +123,19 @@ class ClientStream:
                 self._file_to_receive = None
             else:
                 # Read the next chunk
-                chunk_info = self._read_data(File.CHUNK_INFO_SIZE)
+                chunk_info = self._read_data(File.ENCRYPTED_CHUNK_INFO_SIZE)
                 if not chunk_info:
                     return
-                amount_of_bytes = int.from_bytes(chunk_info, 'big')
+                amount_of_bytes = int(chunk_info)
                 while not (chunk := self._read_data(amount_of_bytes)):
                     pass
                 self._file_to_receive.write_chunk(chunk)
                 return
 
         while header := self._get_header():
-            content = self._read_data(header['size']).decode()
+            while not (content := self._read_data(header['size'])):
+                pass
+            content = content.decode()
             if header['content-type'] == ContentType.TEXT.value:
                 self._new_notification(NotificationType.MESSAGE, content)
             elif header['content-type'] == ContentType.SET_ENCRYPTION.value:
@@ -153,14 +157,16 @@ class ClientStream:
             self._send_data(encrypted_message)
         except OSError:
             return False
-        self._aes = AESCipher(self._session_key)
+        self._aes = AESCipher(encoded_message[:16])
         return True
 
     def send_message(self, message):
-        encoded_message = message.encode()
-        header = Header.build_header(ContentType.TEXT, len(message))
+        encrypted_message = self._aes.encrypt(message, self._encryption_mode)
+        header = Header.build_header(ContentType.TEXT, len(encrypted_message))
+        encrypted_header = self._aes.encrypt(header, self._encryption_mode)
         try:
-            self._send_data(header + encoded_message)
+            self._send_data(encrypted_header)
+            self._send_data(encrypted_message)
             return True
         except OSError:
             return False
@@ -171,15 +177,20 @@ class ClientStream:
 
         self._file_to_send = FileToSend(path)
         file_info = self._file_to_send.details
-        header = Header.build_header(ContentType.FILE, len(file_info))
-        self._send_data(header + file_info)
+        encrypted_message = self._aes.encrypt(file_info, self._encryption_mode)
+        header = Header.build_header(ContentType.FILE, len(encrypted_message))
+        encrypted_header = self._aes.encrypt(header, self._encryption_mode)
+        self._send_data(encrypted_header)
+        self._send_data(encrypted_message)
         return True
 
     def set_encryption_mode(self, encryption_mode):
-        encoded_message = str(encryption_mode).encode()
-        header = Header.build_header(ContentType.SET_ENCRYPTION, len(str(encryption_mode)))
+        encrypted_message = self._aes.encrypt(str(encryption_mode), self._encryption_mode)
+        header = Header.build_header(ContentType.SET_ENCRYPTION, len(encrypted_message))
+        encrypted_header = self._aes.encrypt(header, self._encryption_mode)
         try:
-            self._send_data(header + encoded_message)
+            self._send_data(encrypted_header)
+            self._send_data(encrypted_message)
             self._encryption_mode = encryption_mode
             return True
         except OSError:

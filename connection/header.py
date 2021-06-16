@@ -13,7 +13,8 @@ class ContentType(Enum):
 
 class Header:
     VERSION = 1
-    HEADER_LENGTH = 100
+    HEADER_LENGTH = 128
+    ENCODED_HEADER_LENGTH = 216
     REQUIRED_FIELDS = ['version', 'content-type', 'size']
 
     @staticmethod
@@ -23,10 +24,10 @@ class Header:
             'content-type': content_type.value,
             'size': size
         }
-        header = json.dumps(values).encode()
+        header = json.dumps(values)
 
         # Fill header with spaces, so it has a correct length
-        header += b' ' * (Header.HEADER_LENGTH - len(header))
+        header += ' ' * (Header.HEADER_LENGTH - len(header))
         return header
 
     @staticmethod
