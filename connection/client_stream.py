@@ -1,5 +1,6 @@
 import select
 import socket
+import uuid
 from enum import Enum
 
 from Crypto.Cipher import AES
@@ -18,11 +19,13 @@ class NotificationType(Enum):
 class ClientStream:
     BUFFER_SIZE = 8192
     HEADER_LENGTH = 100
+    UUID_LENGTH = 36
 
     def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC):
         self.host = host
         self.port = port
         self._encryption_mode = encryption_mode
+        self._session_key = None
         self._data = b''  # received and not processed data
         self._new_notifications = []
         self._file_to_send = None
@@ -133,6 +136,12 @@ class ClientStream:
     def connect(self):
         try:
             self.socket.connect((self.host, self.port))
+        except OSError:
+            return False
+        self._session_key = str(uuid.uuid1())
+        encoded_message = self._session_key.encode()
+        try:
+            self._send_data(encoded_message)
             return True
         except OSError:
             return False
