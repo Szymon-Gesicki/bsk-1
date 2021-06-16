@@ -191,15 +191,15 @@ class MainWindow(QMainWindow):
 
             elif m['type'] == NotificationType.RECEIVING_FILE:
                 if m['finished']:
-                    self.add_message('stranger', 'file downloaded.', Config.strangers_text_color())
+                    self.add_message('system', 'file downloaded.', Config.system_text_color())
                 else:
-                    self.add_message('stranger', 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
+                    self.add_message('system', 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.system_text_color())
 
             elif m['type'] == NotificationType.SENDING_FILE:
                 if m['finished']:
-                    self.add_message('stranger', 'file sent.', Config.strangers_text_color())
+                    self.add_message('system', 'file sent.', Config.system_text_color())
                 else:
-                    self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
+                    self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.system_text_color())
 
             elif m['type'] == NotificationType.ENCRYPTION_MODE_CHANGE:
                 self.encryption_mode = AESCipher.AVAILABLE_MODES[m['mode']]
