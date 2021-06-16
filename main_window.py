@@ -19,6 +19,9 @@ class MainWindow(QMainWindow):
         # messages to show
         self.messages = []
 
+        self.host = ""
+        self.host_timer = None
+
         # initialize connection
         self.stream = None
 
@@ -101,18 +104,43 @@ class MainWindow(QMainWindow):
             self.stream.send_file(path)
 
     def did_press_join_button(self):
-        self.stream = ClientStream()
+        host, result = QInputDialog.getText(self, 'Host dialog', 'Enter host:')
+
+        if not result:
+            return
+
+        self.stream = ClientStream(host=host)
         self.disable_stream_button()
         if self.stream.connect():
-            self.add_message('system', 'did connect', Config.system_text_color())
+            self.add_message('system', 'Did connect', Config.system_text_color())
         else:
             self.enable_stream_button()
             self.stream = None
-            self.add_message('system', 'error while connecting', Config.system_text_color())
+            self.add_message('system', 'Error while connecting', Config.system_text_color())
 
     def did_press_create_button(self):
+        host_name, result = QInputDialog.getText(self, 'Host dialog', 'Enter host:')
+
+        if not result:
+            return
+
+        self.add_message('system', 'Waiting for strangers', Config.system_text_color())
         self.disable_stream_button()
-        self.stream = HostStream()
+
+        self.host = host_name
+        # connection after a second to refresh the view
+        self.host_timer = QtCore.QTimer()
+        self.host_timer.timeout.connect(self.start_host)
+        self.host_timer.start(1000) # 1 second
+
+    def start_host(self):
+        self.host_timer.stop()
+        self.create_host(self.host)
+        self.add_message('system', 'Did connect', Config.system_text_color())
+
+    def create_host(self, host):
+        print("create host")
+        self.stream = HostStream(host=host)
 
     def disable_stream_button(self):
         self.join_button.setEnabled(False)
