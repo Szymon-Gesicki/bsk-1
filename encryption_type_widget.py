@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import *
+from aes_cipher import AESCipher
 
 
 class EncryptionTypeWidget:
@@ -9,6 +10,8 @@ class EncryptionTypeWidget:
     def __init__(self, window, start_x, start_y, values):
         self.window = window
         self.values = values
+        self.radio_buttons = []
+        self.disable = False
 
         for idx, value in enumerate(self.values, 0):
             if idx == 0:
@@ -20,14 +23,24 @@ class EncryptionTypeWidget:
         radio_button.setChecked(is_selected)
         radio_button.setGeometry(x, y, self.WIDTH, self.HEIGHT)
         radio_button.toggled.connect(lambda: self.radio_button_state(radio_button))
+        self.radio_buttons.append(radio_button)
 
     def radio_button_state(self, radio_button):
+        if self.disable:
+            return
+
         if radio_button.isChecked():
-            mode = self.mode_from_value(radio_button.text())
+            mode = AESCipher.mode_from_value(radio_button.text())
             self.window.did_change_encryption_mode(mode)
 
-    def mode_from_value(self, value):
-        return list(self.values.keys())[list(self.values.values()).index(value)]
+    def change_value(self, mode='test'):
+        self.disable = True
+        for button in self.radio_buttons:
+            button.setAutoExclusive(False)
+            button.setChecked(mode == button.text())
+            button.setAutoExclusive(True)
+        self.disable = False
+
 
 
 

@@ -22,6 +22,8 @@ class MainWindow(QMainWindow):
         self.host = ""
         self.host_timer = None
 
+        self.encryption_mode = None
+
         # initialize connection
         self.stream = None
 
@@ -156,11 +158,14 @@ class MainWindow(QMainWindow):
 
     def did_change_encryption_mode(self, mode):
         print("did_change_encryption_mode " + str(mode))
+        self.encryption_mode = mode
 
     def did_tick(self):
         if not self.stream:
             return
+
         messages = self.stream.get_new_notifications()
+
         for m in messages:
             if m['type'] == NotificationType.MESSAGE:
                 self.add_message('stranger', m['message'], Config.strangers_text_color())
@@ -176,3 +181,7 @@ class MainWindow(QMainWindow):
                     self.add_message('stranger', 'file sent.', Config.strangers_text_color())
                 else:
                     self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
+
+            elif m['type'] == NotificationType.CHANGE_ENCRYPTION_MODE:
+                self.encryption_mode = AESCipher.mode_from_value(m['mode'])
+                self.encryption_type_widget.change_value(m['mode'])
