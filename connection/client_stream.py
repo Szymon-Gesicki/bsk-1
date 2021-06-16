@@ -5,8 +5,10 @@ from enum import Enum
 
 from Crypto.Cipher import AES
 
+from aes_cipher import AESCipher
 from connection.file import File, FileToReceive, FileToSend
 from connection.header import Header, ContentType
+from key_manager.key_manager import KeyManager
 
 
 class NotificationType(Enum):
@@ -19,13 +21,15 @@ class NotificationType(Enum):
 class ClientStream:
     BUFFER_SIZE = 8192
     HEADER_LENGTH = 100
-    UUID_LENGTH = 36
+    UUID_LENGTH = 128
 
-    def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC):
+    def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC, password=''):
         self.host = host
         self.port = port
         self._encryption_mode = encryption_mode
+        self._key_manager = KeyManager(password)
         self._session_key = None
+        self._aes = None
         self._data = b''  # received and not processed data
         self._new_notifications = []
         self._file_to_send = None
@@ -41,6 +45,8 @@ class ClientStream:
         return True if readable else False
 
     def _send_data(self, text):
+        if self._aes:
+            text = self._aes.encrypt(text, self._encryption_mode)
         text_length = len(text)
         total_sent = 0
         while total_sent < text_length:
@@ -61,6 +67,8 @@ class ClientStream:
             return None
         data = self._data[:length]
         self._data = self._data[length:]
+        if self._aes:
+            data = self._aes.decrypt(data, self._encryption_mode)
         return data
 
     def _get_header(self):
@@ -136,15 +144,17 @@ class ClientStream:
     def connect(self):
         try:
             self.socket.connect((self.host, self.port))
-        except OSError:
+        except OSError as e:
             return False
         self._session_key = str(uuid.uuid1())
         encoded_message = self._session_key.encode()
+        encrypted_message = self._key_manager.encrypt(encoded_message)
         try:
-            self._send_data(encoded_message)
-            return True
+            self._send_data(encrypted_message)
         except OSError:
             return False
+        self._aes = AESCipher(self._session_key)
+        return True
 
     def send_message(self, message):
         encoded_message = message.encode()

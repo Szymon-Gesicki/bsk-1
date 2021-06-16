@@ -1,6 +1,8 @@
 import select
 import socket
 import time
+
+from aes_cipher import AESCipher
 from connection.client_stream import ClientStream
 
 
@@ -9,5 +11,8 @@ class HostStream(ClientStream):
         self.socket.bind((socket.gethostname(), self.port))
         self.socket.listen(5)
         self.connection, info = self.socket.accept()
-        self._session_key = self._read_data(self.UUID_LENGTH).decode()
+        while not (data := self._read_data(self.UUID_LENGTH)):
+            pass
+        self._session_key = self._key_manager.decrypt(data).decode()
+        self._aes = AESCipher(self._session_key)
         return
