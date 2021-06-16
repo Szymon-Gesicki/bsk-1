@@ -2,6 +2,8 @@ import select
 import socket
 from enum import Enum
 
+from Crypto.Cipher import AES
+
 from connection.file import File, FileToReceive, FileToSend
 from connection.header import Header, ContentType
 
@@ -10,15 +12,17 @@ class NotificationType(Enum):
     MESSAGE = 1
     RECEIVING_FILE = 2
     SENDING_FILE = 3
+    ENCRYPTION_MODE_CHANGE = 4
 
 
 class ClientStream:
     BUFFER_SIZE = 8192
     HEADER_LENGTH = 100
 
-    def __init__(self, host='192.168.1.192', port=12345):
+    def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC):
         self.host = host
         self.port = port
+        self._encryption_mode = encryption_mode
         self._data = b''  # received and not processed data
         self._new_notifications = []
         self._file_to_send = None
@@ -114,9 +118,12 @@ class ClientStream:
             content = self._read_data(header['size']).decode()
             if header['content-type'] == ContentType.TEXT.value:
                 self._new_notification(NotificationType.MESSAGE, content)
+            elif header['content-type'] == ContentType.SET_ENCRYPTION.value:
+                encryption_mode = int(content)
+                self._encryption_mode = encryption_mode
+                self._new_notification(NotificationType.ENCRYPTION_MODE_CHANGE, encryption_mode)
             elif header['content-type'] == ContentType.FILE.value:
                 self._file_to_receive = FileToReceive(content)
-                break
 
     def connect(self):
         try:
@@ -143,6 +150,16 @@ class ClientStream:
         header = Header.build_header(ContentType.FILE, len(file_info))
         self._send_data(header + file_info)
         return True
+
+    def set_encryption_mode(self, encryption_mode):
+        encoded_message = str(encryption_mode).encode()
+        header = Header.build_header(ContentType.SET_ENCRYPTION, len(str(encryption_mode)))
+        try:
+            self._send_data(header + encoded_message)
+            self._encryption_mode = encryption_mode
+            return True
+        except OSError:
+            return False
 
     def get_new_notifications(self):
         self._parse_data()
