@@ -16,6 +16,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.password = ""
         self.fetch_password()
 
         self.user_name = "me"
@@ -62,8 +63,6 @@ class MainWindow(QMainWindow):
         text, ok = QInputDialog.getText(None, "", "Password", QLineEdit.Password)
         if ok and text:
             self.password = text
-        else:
-            self.password = ""
 
     def add_scrollable_list(self):
         self.scroll_label.set_text("")
