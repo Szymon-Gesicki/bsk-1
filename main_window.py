@@ -182,6 +182,6 @@ class MainWindow(QMainWindow):
                 else:
                     self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
 
-            elif m['type'] == NotificationType.CHANGE_ENCRYPTION_MODE:
+            elif m['type'] == NotificationType.ENCRYPTION_MODE_CHANGE:
                 self.encryption_mode = AESCipher.mode_from_value(m['mode'])
                 self.encryption_type_widget.change_value(m['mode'])

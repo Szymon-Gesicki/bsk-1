@@ -26,10 +26,11 @@ class AESCipher:
     def _pad(self, s):
         return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
 
+    def _unpad(self, s):
+        return s[:-ord(s[len(s)-1:])]
+    
     @staticmethod
     def mode_from_value(value):
         return list(AESCipher.AVAILABLE_MODES.keys())[list(AESCipher.AVAILABLE_MODES.values()).index(value)]
 
-    @staticmethod
-    def _unpad(s):
-        return s[:-ord(s[len(s)-1:])]
+
