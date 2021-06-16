@@ -15,6 +15,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        self.fetch_password()
+
         self.user_name = "me"
         # messages to show
         self.messages = []
@@ -37,6 +40,7 @@ class MainWindow(QMainWindow):
         self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230, AESCipher.AVAILABLE_MODES)
         self.encryption_type_widget.set_enabled(False)
         self.file_button = QPushButton(self)
+        self.file_button.setEnabled(False)
         self.join_button = QPushButton(self)
         self.create_button = QPushButton(self)
 
@@ -53,6 +57,13 @@ class MainWindow(QMainWindow):
 
         # showing all the widgets
         self.show()
+
+    def fetch_password(self):
+        text, ok = QInputDialog.getText(None, "", "Password", QLineEdit.Password)
+        if ok and text:
+            self.password = text
+        else:
+            self.password = ""
 
     def add_scrollable_list(self):
         self.scroll_label.set_text("")
@@ -117,6 +128,8 @@ class MainWindow(QMainWindow):
         if self.stream.connect():
             self.add_message('system', 'Did connect', Config.system_text_color())
             self.encryption_type_widget.set_enabled(True)
+            self.file_button.setEnabled(True)
+
         else:
             self.enable_stream_button()
             self.stream = None
@@ -142,6 +155,7 @@ class MainWindow(QMainWindow):
         self.create_host(self.host)
         self.add_message('system', 'Did connect', Config.system_text_color())
         self.encryption_type_widget.set_enabled(True)
+        self.file_button.setEnabled(True)
 
     def create_host(self, host):
         print("create host")
