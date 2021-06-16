@@ -33,13 +33,17 @@ class EncryptionTypeWidget:
             mode = AESCipher.mode_from_value(radio_button.text())
             self.window.did_change_encryption_mode(mode)
 
-    def change_value(self, mode='test'):
+    def change_value(self, mode='CBC'):
         self.disable = True
         for button in self.radio_buttons:
             button.setAutoExclusive(False)
-            button.setChecked(mode == button.text())
+            button.setChecked(str(mode) == button.text())
             button.setAutoExclusive(True)
         self.disable = False
+
+    def set_enabled(self, value):
+        for button in self.radio_buttons:
+            button.setEnabled(value)
 
 
 

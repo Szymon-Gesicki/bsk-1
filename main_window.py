@@ -35,6 +35,7 @@ class MainWindow(QMainWindow):
         self.scroll_label = ScrollLabelWidget(self)
         self.text_input = QLineEdit(self)
         self.encryption_type_widget = EncryptionTypeWidget(self, 20, 230, AESCipher.AVAILABLE_MODES)
+        self.encryption_type_widget.set_enabled(False)
         self.file_button = QPushButton(self)
         self.join_button = QPushButton(self)
         self.create_button = QPushButton(self)
@@ -115,6 +116,7 @@ class MainWindow(QMainWindow):
         self.disable_stream_button()
         if self.stream.connect():
             self.add_message('system', 'Did connect', Config.system_text_color())
+            self.encryption_type_widget.set_enabled(True)
         else:
             self.enable_stream_button()
             self.stream = None
@@ -139,6 +141,7 @@ class MainWindow(QMainWindow):
         self.host_timer.stop()
         self.create_host(self.host)
         self.add_message('system', 'Did connect', Config.system_text_color())
+        self.encryption_type_widget.set_enabled(True)
 
     def create_host(self, host):
         print("create host")
@@ -159,6 +162,9 @@ class MainWindow(QMainWindow):
     def did_change_encryption_mode(self, mode):
         print("did_change_encryption_mode " + str(mode))
         self.encryption_mode = mode
+
+        if self.stream:
+            self.stream.set_encryption_mode(self.encryption_mode)
 
     def did_tick(self):
         if not self.stream:
@@ -183,5 +189,5 @@ class MainWindow(QMainWindow):
                     self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.strangers_text_color())
 
             elif m['type'] == NotificationType.ENCRYPTION_MODE_CHANGE:
-                self.encryption_mode = AESCipher.mode_from_value(m['mode'])
-                self.encryption_type_widget.change_value(m['mode'])
+                self.encryption_mode = AESCipher.AVAILABLE_MODES[m['mode']]
+                self.encryption_type_widget.change_value(self.encryption_mode)
