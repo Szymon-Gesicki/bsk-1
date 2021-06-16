@@ -27,6 +27,7 @@ class MainWindow(QMainWindow):
         self.host_timer = None
 
         self.encryption_mode = None
+        self.progress_dialog = None
 
         # initialize connection
         self.stream = None
@@ -147,7 +148,7 @@ class MainWindow(QMainWindow):
         # connection after a second to refresh the view
         self.host_timer = QtCore.QTimer()
         self.host_timer.timeout.connect(self.start_host)
-        self.host_timer.start(1000) # 1 second
+        self.host_timer.start(1000)  # 1 second
 
     def start_host(self):
         self.host_timer.stop()
@@ -157,7 +158,6 @@ class MainWindow(QMainWindow):
         self.file_button.setEnabled(True)
 
     def create_host(self, host):
-        print("create host")
         self.stream = HostStream(host=host)
 
     def disable_stream_button(self):
@@ -173,7 +173,6 @@ class MainWindow(QMainWindow):
         self.timer.start(Config.socket_interval())
 
     def did_change_encryption_mode(self, mode):
-        print("did_change_encryption_mode " + str(mode))
         self.encryption_mode = mode
 
         if self.stream:
@@ -191,15 +190,27 @@ class MainWindow(QMainWindow):
 
             elif m['type'] == NotificationType.RECEIVING_FILE:
                 if m['finished']:
+                    if self.progress_dialog:
+                        self.progress_dialog.cancel()
                     self.add_message('system', 'file downloaded.', Config.system_text_color())
                 else:
-                    self.add_message('system', 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.system_text_color())
+                    if not self.progress_dialog:
+                        self.progress_dialog = QProgressDialog("Receiving file...", "Cancel", 0, m['size'], self)
+                    else:
+                        self.add_message('system', 'processing', Config.system_text_color())
+                        self.progress_dialog.setValue(m['processed'])
 
             elif m['type'] == NotificationType.SENDING_FILE:
                 if m['finished']:
+                    if self.progress_dialog:
+                        self.progress_dialog.cancel()
                     self.add_message('system', 'file sent.', Config.system_text_color())
                 else:
-                    self.add_message(self.user_name, 'processed: ' + str(m['processed']) + ' size: ' + str(m['size']), Config.system_text_color())
+                    if not self.progress_dialog:
+                        self.progress_dialog = QProgressDialog("Sending file...", "Cancel", 0, m['size'], self)
+                    else:
+                        self.add_message('system', 'processing', Config.system_text_color())
+                        self.progress_dialog.setValue(m['processed'])
 
             elif m['type'] == NotificationType.ENCRYPTION_MODE_CHANGE:
                 self.encryption_mode = AESCipher.AVAILABLE_MODES[m['mode']]
