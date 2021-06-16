@@ -89,6 +89,11 @@ class ClientStream:
                 'path': self._file_to_send.path,
                 'finished': self._file_to_send.finished,
             })
+        elif message_type == NotificationType.ENCRYPTION_MODE_CHANGE:
+            self._new_notifications.append({
+                'type': message_type,
+                'mode': int(content),
+            })
 
     def _parse_data(self):
         if self._file_to_send:
