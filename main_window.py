@@ -174,7 +174,6 @@ class MainWindow(QMainWindow):
         self.timer.start(Config.socket_interval())
 
     def did_change_encryption_mode(self, mode):
-        print("did_change_encryption_mode " + str(mode))
         self.encryption_mode = mode
 
         if self.stream:
