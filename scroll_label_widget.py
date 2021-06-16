@@ -23,7 +23,6 @@ class ScrollLabelWidget(QScrollArea):
         # adding label to the layout
         lay.addWidget(self.label)
 
-    # the setText method
     def set_text(self, text):
         # setting text to the label
         self.label.setText(text)
