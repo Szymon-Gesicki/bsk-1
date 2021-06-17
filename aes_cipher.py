@@ -5,7 +5,7 @@ from Crypto.Cipher import AES
 
 class AESCipher:
 
-    AVAILABLE_MODES = {AES.MODE_CBC: 'CBC', AES.MODE_CFB: 'CFB', AES.MODE_OFB: 'OFB'}
+    AVAILABLE_MODES = {AES.MODE_CBC: 'CBC', AES.MODE_CFB: 'CFB', AES.MODE_OFB: 'OFB', AES.MODE_EAX: 'EAX', AES.MODE_GCM: 'GCM'}
 
     def __init__(self, key):
         self.bs = AES.block_size
