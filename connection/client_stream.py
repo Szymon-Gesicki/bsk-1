@@ -23,10 +23,10 @@ class ClientStream:
     UUID_LENGTH = 128
 
     def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC, password=''):
-        self.host = host
+        self.host = '192.168.1.192'
         self.port = port
         self._encryption_mode = encryption_mode
-        self._key_manager = KeyManager(password)
+        self._key_manager = KeyManager('secret_messenger')
         self._session_key = None
         self._aes = None
         self._data = b''  # received and not processed data
@@ -57,14 +57,14 @@ class ClientStream:
         data = self._data[:length]
         self._data = self._data[length:]
         if self._aes:
-            data = self._aes.decrypt(data, self._encryption_mode).encode()
+            data = self._aes.decrypt(data, self._encryption_mode)
         return data
 
     def _get_header(self):
         data = self._read_data(Header.ENCODED_HEADER_LENGTH)
         if not data:
             return None
-        header = Header.from_string(data.decode())
+        header = Header.from_string(data.decode('utf-8'))
         return header
 
     def _parse_data(self):
@@ -76,7 +76,7 @@ class ClientStream:
             while not (content := self._read_data(header.content_size)):
                 self._receive_data()
             if header.content_type == ContentType.TEXT.value:
-                content = content.decode()
+                content = content.decode('utf-8')
                 self._new_notification(NotificationType.MESSAGE, content)
             elif header.content_type == ContentType.SET_ENCRYPTION.value:
                 encryption_mode = int(content)
@@ -95,7 +95,7 @@ class ClientStream:
         # Encrypt header and content
         content = self._aes.encrypt(content, self._encryption_mode)
         header.content_size = len(content)
-        header = self._aes.encrypt(str(header), self._encryption_mode)
+        header = self._aes.encrypt(str(header).encode('utf8'), self._encryption_mode)
         # Send encrypted data
         to_send = header + content
         self._send_raw_data(to_send)
@@ -176,7 +176,7 @@ class ClientStream:
 
     def send_message(self, message):
         header = Header(ContentType.TEXT)
-        self._send_data(header, message)
+        self._send_data(header, message.encode('utf8'))
         return True
 
     def send_file(self, path):
@@ -189,7 +189,7 @@ class ClientStream:
     def set_encryption_mode(self, encryption_mode):
         header = Header(ContentType.SET_ENCRYPTION)
         message = str(encryption_mode)
-        self._send_data(header, message)
+        self._send_data(header, message.encode('utf8'))
         self._encryption_mode = encryption_mode
         return True
 

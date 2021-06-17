@@ -12,7 +12,7 @@ class AESCipher:
         self.key = key
 
     def encrypt(self, raw, mode):
-        raw = raw.encode('utf8')  # encode to bytes here
+        # raw = raw.encode('utf8')  # encode to bytes here
         raw = self._pad(raw)
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, mode, iv)
@@ -22,7 +22,7 @@ class AESCipher:
         enc = base64.b64decode(enc)
         iv = enc[:AES.block_size]
         cipher = AES.new(self.key, mode, iv)
-        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+        return self._unpad(cipher.decrypt(enc[AES.block_size:]))
 
     def _pad(self, s):
         # pad with bytes instead of str

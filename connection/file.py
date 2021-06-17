@@ -82,4 +82,4 @@ class FileToSend(File):
 
         if not data or len(data) < File.CHUNK_SIZE:
             self._finished = True  # if the whole file has been read
-        return data.decode()
+        return data
