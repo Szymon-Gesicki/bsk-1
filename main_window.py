@@ -227,3 +227,14 @@ class MainWindow(QMainWindow):
                 self.encryption_mode = AESCipher.AVAILABLE_MODES[m['mode']]
                 self.add_message('system', 'Stranger changed the encryption mode to ' + str(self.encryption_mode), Config.system_text_color())
                 self.encryption_type_widget.change_value(self.encryption_mode)
+
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the secret messenger?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            event.accept()
+            if self.stream:
+                self.stream.close()
+        else:
+            event.ignore()
