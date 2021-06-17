@@ -9,6 +9,7 @@ from scroll_label_widget import ScrollLabelWidget
 from encryption_type_widget import EncryptionTypeWidget
 from theme import Theme
 from aes_cipher import AESCipher
+from key_manager.key_manager import KeyManager
 
 
 class MainWindow(QMainWindow):
@@ -17,7 +18,11 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.password = ""
-        self.fetch_password()
+
+        if not KeyManager.check_if_keys_exist():
+            self.create_password()
+        else:
+            self.fetch_password()
 
         self.user_name = "me"
         # messages to show
@@ -64,6 +69,14 @@ class MainWindow(QMainWindow):
         text, ok = QInputDialog.getText(None, "", "Password", QLineEdit.Password)
         if ok and text:
             self.password = text
+
+    def create_password(self):
+        while True:
+            text, ok = QInputDialog.getText(None, "Create password", "Password", QLineEdit.Password)
+            if ok and text:
+                self.password = text
+                KeyManager.generate_keys(text)
+                return
 
     def add_scrollable_list(self):
         self.scroll_label.set_text("")
