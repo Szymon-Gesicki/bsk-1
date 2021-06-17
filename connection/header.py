@@ -19,15 +19,14 @@ class FileState(Enum):
 
 class Header:
     VERSION = 2
-    HEADER_LENGTH = 128
-    ENCODED_HEADER_LENGTH = 216
+    HEADER_LENGTH = 256
+    ENCODED_HEADER_LENGTH = 384
     REQUIRED_FIELDS = ['version', 'content-type', 'size']
 
     def __init__(self, content_type, file_size=0, file_name='', file_state=FileState.NONE):
         self._content_size = 0
         self._content_type = content_type
         self._file_size = file_size
-        # TODO: Max file name length
         self._file_name = file_name
         self._file_state = file_state
 

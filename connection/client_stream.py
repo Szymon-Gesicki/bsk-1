@@ -4,6 +4,7 @@ import uuid
 from enum import Enum
 
 from Crypto.Cipher import AES
+from Crypto.PublicKey import RSA
 
 from aes_cipher import AESCipher
 from connection.file import File, FileToReceive, FileToSend
@@ -21,12 +22,13 @@ class NotificationType(Enum):
 class ClientStream:
     BUFFER_SIZE = 8192
     UUID_LENGTH = 128
+    PUBKEY_LENGTH = 212
 
     def __init__(self, host='192.168.1.192', port=12345, encryption_mode=AES.MODE_CBC, password=''):
-        self.host = '192.168.1.192'
+        self.host = host
         self.port = port
         self._encryption_mode = encryption_mode
-        self._key_manager = KeyManager('secret_messenger')
+        self._key_manager = KeyManager(password)
         self._session_key = None
         self._aes = None
         self._data = b''  # received and not processed data
@@ -95,7 +97,7 @@ class ClientStream:
         # Encrypt header and content
         content = self._aes.encrypt(content, self._encryption_mode)
         header.content_size = len(content)
-        header = self._aes.encrypt(str(header).encode('utf8'), self._encryption_mode)
+        header = self._aes.encrypt(str(header).encode('utf-8'), self._encryption_mode)
         # Send encrypted data
         to_send = header + content
         self._send_raw_data(to_send)
@@ -164,9 +166,12 @@ class ClientStream:
             self.socket.connect((self.host, self.port))
         except OSError as e:
             return False
+        while not (pubkey := self._read_data(self.PUBKEY_LENGTH)):
+            self._receive_data()
+        pubkey = RSA.import_key(pubkey)
         self._session_key = str(uuid.uuid1())
         encoded_message = self._session_key.encode()
-        encrypted_message = self._key_manager.encrypt(encoded_message)
+        encrypted_message = self._key_manager.encrypt(encoded_message, pubkey)
         try:
             self._send_raw_data(encrypted_message)
         except OSError:

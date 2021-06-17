@@ -11,6 +11,7 @@ class HostStream(ClientStream):
         self.socket.bind((socket.gethostname(), self.port))
         self.socket.listen(5)
         self.connection, info = self.socket.accept()
+        self._send_raw_data(self._key_manager.public_key.exportKey('OpenSSH'))
         while not (data := self._read_data(self.UUID_LENGTH)):
             self._receive_data()
         self._session_key = self._key_manager.decrypt(data)
