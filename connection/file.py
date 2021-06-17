@@ -1,18 +1,9 @@
-import json
 import os
-from json import JSONDecodeError
-
-from connection.exceptions import FileInfoReadingError
 
 
 class File:
-    VERSION = 1
-    REQUIRED_FIELDS = ['version', 'file-name', 'size']
     DOWNLOAD_PATH = 'tmp'
-    CHUNK_INFO_SIZE = 2
-    ENCRYPTED_CHUNK_INFO_SIZE = 44
     CHUNK_SIZE = 32768
-    ENCRYPTED_CHUNK_SIZE = 43736
 
     def __init__(self, path):
         self._path = path
@@ -26,17 +17,12 @@ class File:
         self.close()
 
     @property
-    def details(self):
-        details = {
-            'version': File.VERSION,
-            'file-name': self._file_name,
-            'size': self._size,
-        }
-        return json.dumps(details)
-
-    @property
     def size(self):
         return self._size
+
+    @property
+    def name(self):
+        return self._file_name
 
     @property
     def processed_size(self):
@@ -50,6 +36,10 @@ class File:
     def finished(self):
         return self._finished
 
+    @finished.setter
+    def finished(self, value):
+        self._finished = value
+
     @staticmethod
     def _prepare_path(path):
         if not os.path.isdir(os.path.dirname(path)):
@@ -60,32 +50,20 @@ class File:
 
 
 class FileToReceive(File):
-    def __init__(self, file_info):
+    def __init__(self, header):
         super().__init__(File.DOWNLOAD_PATH)
-        self._load_from_str(file_info)
+        self._load_from_header(header)
 
-    def _load_from_str(self, data):
-        try:
-            values = json.loads(data)
-        except JSONDecodeError:
-            raise FileInfoReadingError(data, 'Error when parsing received file-info.')
-        if values.get('version') != File.VERSION:
-            raise FileInfoReadingError(values,
-                                       'Version of the received file-info is different than this parser version.')
-        if not all(key in values for key in File.REQUIRED_FIELDS):
-            raise FileInfoReadingError(data, 'Not all required values are in received file-info.')
-
-        self._file_name = values['file-name']
+    def _load_from_header(self, header):
+        self._file_name = header.file_name
         self._path = os.path.join(self._path, self._file_name)
-        self._size = values['size']
+        self._size = header.file_size
         self._prepare_path(self._path)
         self._file = open(self._path, 'wb')
 
     def write_chunk(self, chunk):
         self._file.write(chunk)
         self._processed_size += len(chunk)
-        if len(chunk) < File.CHUNK_SIZE:
-            self._finished = True  # if the whole file has been saved
 
 
 class FileToSend(File):
@@ -99,12 +77,9 @@ class FileToSend(File):
         self._file = open(path, 'rb')
 
     def read_chunk(self):
-        amount_of_bytes = (0).to_bytes(2, byteorder='big')
-        if data := self._file.read(File.ENCRYPTED_CHUNK_SIZE):
-            amount_of_bytes = (len(data)).to_bytes(2, byteorder='big')
-
+        data = self._file.read(File.CHUNK_SIZE)
         self._processed_size += len(data)
 
-        if not data or len(data) < File.ENCRYPTED_CHUNK_SIZE:
+        if not data or len(data) < File.CHUNK_SIZE:
             self._finished = True  # if the whole file has been read
         return data.decode()

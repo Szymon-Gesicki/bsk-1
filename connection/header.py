@@ -11,35 +11,78 @@ class ContentType(Enum):
     SET_ENCRYPTION = 3
 
 
+class FileState(Enum):
+    NONE = 0
+    SENDING_IN_PROGRESS = 1
+    SENDING_FINISHED = 2
+
+
 class Header:
-    VERSION = 1
+    VERSION = 2
     HEADER_LENGTH = 128
     ENCODED_HEADER_LENGTH = 216
     REQUIRED_FIELDS = ['version', 'content-type', 'size']
 
-    @staticmethod
-    def build_header(content_type, size):
+    def __init__(self, content_type, file_size=0, file_name='', file_state=FileState.NONE):
+        self._content_size = 0
+        self._content_type = content_type
+        self._file_size = file_size
+        # TODO: Max file name length
+        self._file_name = file_name
+        self._file_state = file_state
+
+    def __str__(self):
+        header_string = json.dumps(self._to_dict())
+        # Fill header with spaces, so it has a correct length
+        header_string += ' ' * (Header.HEADER_LENGTH - len(header_string))
+        return header_string
+
+    def __repr__(self):
+        return self.__str__()
+
+    def _to_dict(self):
         values = {
             'version': Header.VERSION,
-            'content-type': content_type.value,
-            'size': size
+            'content-type': self._content_type.value,
+            'size': self._content_size,
+            'file-size': self._file_size,
+            'file-name': self._file_name,
+            'file-state': self._file_state.value,
         }
-        header = json.dumps(values)
+        return values
 
-        # Fill header with spaces, so it has a correct length
-        header += ' ' * (Header.HEADER_LENGTH - len(header))
-        return header
+    @property
+    def file_name(self):
+        return self._file_name
+
+    @property
+    def content_type(self):
+        return self._content_type
+
+    @property
+    def file_state(self):
+        return self._file_state
+
+    @property
+    def file_size(self):
+        return self._file_size
+
+    @property
+    def content_size(self):
+        return self._content_size
+
+    @content_size.setter
+    def content_size(self, value):
+        self._content_size = value
 
     @staticmethod
-    def load_header(header):
+    def from_string(header):
         try:
-            header = json.loads(header)
+            header_dict = json.loads(header)
         except JSONDecodeError:
             raise HeaderReadingError(header, 'Error when parsing received header.')
-        if header.get('version') != Header.VERSION:
-            raise HeaderReadingError(header, 'Version of the received header is different than this parser version.')
-        if not all(key in header for key in Header.REQUIRED_FIELDS):
-            raise HeaderReadingError(header, 'Not all required values are in received header.')
-        if header['content-type'] == ContentType.FILE.value and not 'file-info-size' not in header:
-            raise HeaderReadingError(header, "No 'info-size' in header.")
-        return header
+        created_header = Header(header_dict['content-type'], header_dict['file-size'], header_dict['file-name'],
+                                header_dict['file-state'])
+        created_header.content_size = header_dict['size']
+        return created_header
+
