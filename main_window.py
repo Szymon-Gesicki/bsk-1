@@ -197,7 +197,6 @@ class MainWindow(QMainWindow):
                     if not self.progress_dialog:
                         self.progress_dialog = QProgressDialog("Receiving file...", "Cancel", 0, m['size'], self)
                     else:
-                        self.add_message('system', 'processing', Config.system_text_color())
                         self.progress_dialog.setValue(m['processed'])
 
             elif m['type'] == NotificationType.SENDING_FILE:
@@ -209,9 +208,9 @@ class MainWindow(QMainWindow):
                     if not self.progress_dialog:
                         self.progress_dialog = QProgressDialog("Sending file...", "Cancel", 0, m['size'], self)
                     else:
-                        self.add_message('system', 'processing', Config.system_text_color())
                         self.progress_dialog.setValue(m['processed'])
 
             elif m['type'] == NotificationType.ENCRYPTION_MODE_CHANGE:
                 self.encryption_mode = AESCipher.AVAILABLE_MODES[m['mode']]
+                self.add_message('system', 'Stranger changed the encryption mode to ' + str(self.encryption_mode), Config.system_text_color())
                 self.encryption_type_widget.change_value(self.encryption_mode)
