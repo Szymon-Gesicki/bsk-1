@@ -12,10 +12,11 @@ class AESCipher:
         self.key = key
 
     def encrypt(self, raw, mode):
+        raw = raw.encode('utf8')  # encode to bytes here
         raw = self._pad(raw)
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, mode, iv)
-        return base64.b64encode(iv + cipher.encrypt(raw.encode()))
+        return base64.b64encode(iv + cipher.encrypt(raw))
 
     def decrypt(self, enc, mode):
         enc = base64.b64decode(enc)
@@ -24,7 +25,9 @@ class AESCipher:
         return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
 
     def _pad(self, s):
-        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+        # pad with bytes instead of str
+        return s + (self.bs - len(s) % self.bs) * \
+               chr(self.bs - len(s) % self.bs).encode('utf8')
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
@@ -32,5 +35,3 @@ class AESCipher:
     @staticmethod
     def mode_from_value(value):
         return list(AESCipher.AVAILABLE_MODES.keys())[list(AESCipher.AVAILABLE_MODES.values()).index(value)]
-
-
