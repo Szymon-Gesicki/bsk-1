@@ -35,8 +35,14 @@ class KeyManager:
     def __init__(self, password=''):
         hashed_password = _hash_password(password)
         aes = AESCipher(hashed_password[:16])
-        self._public_key = _retrieve_public_key(aes)
-        self._private_key = _retrieve_private_key(aes)
+        self._hacker = False
+
+        try:
+            self._public_key = _retrieve_public_key(aes)
+            self._private_key = _retrieve_private_key(aes)
+        except:
+            self._public_key, self._private_key = self._generate_temporary_keys()
+            self._hacker = True
 
     @staticmethod
     def check_if_keys_exist():
@@ -61,9 +67,23 @@ class KeyManager:
         f.write(encrypted_pubkey)
         f.close()
 
+    def _generate_temporary_keys(self):
+
+        # Private key
+        key = RSA.generate(1024)
+
+        # Public key
+        pubkey = key.publickey()
+
+        return pubkey, key
+
     @property
     def public_key(self):
         return self._public_key
+
+    @property
+    def hacker(self):
+        return self._hacker
 
     @property
     def private_key(self):

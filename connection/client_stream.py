@@ -1,6 +1,8 @@
 import select
 import socket
 import uuid
+import random
+import string
 from enum import Enum
 
 from Crypto.Cipher import AES
@@ -17,6 +19,7 @@ class NotificationType(Enum):
     RECEIVING_FILE = 2
     SENDING_FILE = 3
     ENCRYPTION_MODE_CHANGE = 4
+    HACKER = 5
 
 
 class ClientStream:
@@ -36,10 +39,16 @@ class ClientStream:
         self._file_to_send = None
         self._file_to_receive = None
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # initialize socket connection
+        self.is_hacker = False
         self._create_connection()
 
     def _create_connection(self):
         self.connection = self.socket
+
+    def get_random_string(self, length):
+        letters = string.ascii_lowercase
+        result = ''.join(random.choice(letters) for i in range(length))
+        return result
 
 # --- Receiving data ---
 
@@ -90,6 +99,8 @@ class ClientStream:
                 self._file_to_receive.write_chunk(content)
                 if header.file_state == FileState.SENDING_FINISHED.value:
                     self._file_to_receive.finished = True
+            elif header.content_type == ContentType.WARNING.value:
+                self.is_hacker = True
 
 # --- Sending data ---
 
@@ -126,7 +137,7 @@ class ClientStream:
 
     def _new_notification(self, message_type, content=None):
         """ Creates new notification to be send to window manager """
-        if message_type == NotificationType.MESSAGE:
+        if message_type == NotificationType.MESSAGE or message_type == NotificationType.HACKER:
             self._new_notifications.append({
                 'type': message_type,
                 'message': content,
@@ -180,6 +191,8 @@ class ClientStream:
         return True
 
     def send_message(self, message):
+        if self.is_hacker:
+            message = self.get_random_string(len(message))
         header = Header(ContentType.TEXT)
         self._send_data(header, message.encode('utf8'))
         return True

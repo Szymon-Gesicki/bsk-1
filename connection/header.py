@@ -9,6 +9,7 @@ class ContentType(Enum):
     TEXT = 1
     FILE = 2
     SET_ENCRYPTION = 3
+    WARNING = 4
 
 
 class FileState(Enum):

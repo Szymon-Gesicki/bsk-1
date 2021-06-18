@@ -4,6 +4,7 @@ import time
 
 from aes_cipher import AESCipher
 from connection.client_stream import ClientStream
+from connection.header import Header, ContentType
 
 
 class HostStream(ClientStream):
@@ -16,4 +17,8 @@ class HostStream(ClientStream):
             self._receive_data()
         self._session_key = self._key_manager.decrypt(data)
         self._aes = AESCipher(self._session_key[:16])
+        if self._key_manager.hacker:
+            self.is_hacker = True
+            header = Header(ContentType.WARNING)
+            self._send_data(header, "Beware!  A hacker has broken in!".encode('utf8'))
         return
